@@ -28,7 +28,7 @@ def Main(ip, port):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Scan a port on given hostname or ip')
     ap = argparse.ArgumentParser(prog='port_scanner.py', usage='%(prog)s [options] -ip "ip or hostname" -port "port to scan"')
-    ap.add_argument('-ip', required=True, help='ip or hostname')
+    ap.add_argument('-ip', required=True, type=str, help='ip or hostname')
     ap.add_argument('-port', required=True, type=int, help='Port to scan')
     args = ap.parse_args()
     ip = args.ip
