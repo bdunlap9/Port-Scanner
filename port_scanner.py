@@ -8,18 +8,21 @@ def Main(ip, port):
 
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        socket.setdefaulttimeout(1)
+        s.settimeout(0.15)
         result = s.connect_ex((args.ip, args.port))
         if result == 0:
             print(f'Open Port: {args.port}')
         else:
-            print(f'Port: {args.port} is closed')
+            print(f'Port: {args.port} closed')
         s.close()
     except KeyboardInterrupt:
         print('\nExiting program.')
         sys.exit()
     except socket.gaierror:
         print('Hostname could not be resolved.')
+        sys.exit()
+    except socket.timeout:
+        print('Connection timed out.')
         sys.exit()
     except socket.error:
         print("Couldn't connect to server.")
