@@ -1,20 +1,18 @@
 import socket, argparse, sys
 
-def Main(ip, port):
+def Main(ip):
     print('-' * 120)
     print(f'Scanning target: {args.ip}')
-    print(f'Checking port: {args.port}')
     print('-' * 120)
 
     try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(0.15)
-        result = s.connect_ex((args.ip, args.port))
-        if result == 0:
-            print(f'Open Port: {args.port}')
-        else:
-            print(f'Port: {args.port} closed')
-        s.close()
+        for port in range(1, 65535):
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(0.15)
+            result = s.connect_ex((args.ip, port))
+            if result == 0:
+                print(f'Open Port: {port}')
+            s.close()
     except KeyboardInterrupt:
         print('\nExiting program.')
         sys.exit()
@@ -30,9 +28,8 @@ def Main(ip, port):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Scan a port on given hostname or ip')
-    ap = argparse.ArgumentParser(prog='port_scanner.py', usage='%(prog)s [options] -ip "ip or hostname" -port "port to scan"')
+    ap = argparse.ArgumentParser(prog='port_scanner.py', usage='%(prog)s [options] -ip "ip or hostname"')
     ap.add_argument('-ip', required=True, type=str, help='ip or hostname')
-    ap.add_argument('-port', required=True, type=int, help='Port to scan')
     args = ap.parse_args()
     ip = args.ip
     Main(ip)
