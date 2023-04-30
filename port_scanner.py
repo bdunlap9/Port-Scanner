@@ -1,4 +1,8 @@
-import socket, argparse, nmap
+import socket
+import argparse
+import nmap
+import asyncio
+from functools import partial
 
 class AdvancedPortScanner:
     def __init__(self, target_ip, start_port, end_port):
@@ -6,16 +10,28 @@ class AdvancedPortScanner:
         self.start_port = start_port
         self.end_port = end_port
 
-    def scan_ports(self):
-        open_ports = []
+    async def scan_port(self, port):
+        open_port = None
+        conn = asyncio.open_connection(self.target_ip, port)
+        _, writer = await asyncio.wait_for(conn, timeout=1, return_when=asyncio.FIRST_COMPLETED)
+        
+        if writer:
+            open_port = port
+            writer.close()
+            await writer.wait_closed()
+        return open_port
 
-        for port in range(self.start_port, self.end_port + 1):
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(1)
-            result = sock.connect_ex((self.target_ip, port))
-            if result == 0:
-                open_ports.append(port)
-            sock.close()
+    async def scan_ports(self):
+        open_ports = []
+        port_scan_tasks = [self.scan_port(port) for port in range(self.start_port, self.end_port + 1)]
+
+        for task in asyncio.as_completed(port_scan_tasks):
+            try:
+                open_port = await task
+                if open_port is not None:
+                    open_ports.append(open_port)
+            except:
+                pass
 
         return open_ports
 
@@ -33,8 +49,7 @@ class AdvancedPortScanner:
 
         return services
 
-
-def main():
+async def main():
     parser = argparse.ArgumentParser(description="Advanced Port Scanner with Service Detection")
     parser.add_argument("target_ip", help="Target IP address")
     parser.add_argument("start_port", type=int, help="Start port number")
@@ -48,13 +63,12 @@ def main():
     print(f"Scanning target: {target_ip}")
 
     scanner = AdvancedPortScanner(target_ip, start_port, end_port)
-    open_ports = scanner.scan_ports()
+    open_ports = await scanner.scan_ports()
     services = scanner.detect_services(open_ports)
 
     print("\nOpen Ports and Services:")
     for port, service in services.items():
         print(f"{port}: {service}")
 
-
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
