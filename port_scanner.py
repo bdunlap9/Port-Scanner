@@ -1,7 +1,4 @@
-import socket
-import argparse
-import nmap
-import asyncio
+import socket, argparse, nmap, asyncio
 from functools import partial
 
 class AdvancedPortScanner:
