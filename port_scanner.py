@@ -1,39 +1,63 @@
-import socket, argparse, sys
+import socket
+import argparse
+import nmap
 
-def Main(ip, port):
-    print('-' * 120)
-    print(f'Scanning target: {args.ip}')
-    print(f'Checking port: {args.port}')
-    print('-' * 120)
 
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(0.15)
-        result = s.connect_ex((args.ip, args.port))
-        if result == 0:
-            print(f'Open Port: {args.port}')
-        else:
-            print(f'Port: {args.port} closed')
-        s.close()
-    except KeyboardInterrupt:
-        print('\nExiting program.')
-        sys.exit()
-    except socket.gaierror:
-        print('Hostname could not be resolved.')
-        sys.exit()
-    except socket.timeout:
-        print('Connection timed out.')
-        sys.exit()
-    except socket.error:
-        print("Couldn't connect to server.")
-        sys.exit()
+class AdvancedPortScanner:
+    def __init__(self, target_ip, start_port, end_port):
+        self.target_ip = target_ip
+        self.start_port = start_port
+        self.end_port = end_port
+
+    def scan_ports(self):
+        open_ports = []
+
+        for port in range(self.start_port, self.end_port + 1):
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(1)
+            result = sock.connect_ex((self.target_ip, port))
+            if result == 0:
+                open_ports.append(port)
+            sock.close()
+
+        return open_ports
+
+    def detect_services(self, open_ports):
+        nm = nmap.PortScanner()
+        services = {}
+
+        for port in open_ports:
+            try:
+                result = nm.scan(self.target_ip, str(port))
+                service = result['scan'][self.target_ip]['tcp'][port]['name']
+                services[port] = service
+            except KeyError:
+                services[port] = 'unknown'
+
+        return services
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Advanced Port Scanner with Service Detection")
+    parser.add_argument("target_ip", help="Target IP address")
+    parser.add_argument("start_port", type=int, help="Start port number")
+    parser.add_argument("end_port", type=int, help="End port number")
+    args = parser.parse_args()
+
+    target_ip = args.target_ip
+    start_port = args.start_port
+    end_port = args.end_port
+
+    print(f"Scanning target: {target_ip}")
+
+    scanner = AdvancedPortScanner(target_ip, start_port, end_port)
+    open_ports = scanner.scan_ports()
+    services = scanner.detect_services(open_ports)
+
+    print("\nOpen Ports and Services:")
+    for port, service in services.items():
+        print(f"{port}: {service}")
+
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Scan a port on given hostname or ip')
-    ap = argparse.ArgumentParser(prog='port_scanner.py', usage='%(prog)s [options] -ip "ip or hostname" -port "port to scan"')
-    ap.add_argument('-ip', required=True, type=str, help='ip or hostname')
-    ap.add_argument('-port', required=True, type=int, help='Port to scan')
-    args = ap.parse_args()
-    ip = args.ip
-    port = args.port
-    Main(ip, port)
+    main()
