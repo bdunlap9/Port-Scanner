@@ -1,7 +1,4 @@
-import socket
-import argparse
-import nmap
-
+import socket, argparse, nmap
 
 class AdvancedPortScanner:
     def __init__(self, target_ip, start_port, end_port):
