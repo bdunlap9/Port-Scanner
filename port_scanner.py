@@ -1,5 +1,4 @@
-import socket, argparse, nmap, asyncio
-from functools import partial
+import argparse, nmap, asyncio
 
 class AdvancedPortScanner:
     def __init__(self, target_ip, start_port, end_port):
